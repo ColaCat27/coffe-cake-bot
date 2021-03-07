@@ -1,0 +1,29 @@
+{
+  "name": "coffe-cake-bot",
+  "version": "1.0.0",
+  "description": "telegram bot for coffee cake orders",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ColaCat27/coffe-cake-bot.git"
+  },
+  "keywords": [
+    "coffe",
+    "cake"
+  ],
+  "author": "Tischenko Vladislav <vlad.tiw27@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ColaCat27/coffe-cake-bot/issues"
+  },
+  "homepage": "https://github.com/ColaCat27/coffe-cake-bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.51.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
