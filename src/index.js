@@ -106,5 +106,9 @@ bot.on('message', msg => {
         });
     } else if (msg.text === 'Мой профиль 💼') {
         bot.sendMessage(clientId, `Телеграм ID: ${msg.from.id}\n Имя: ${msg.from.first_name}\n Юзернейм: ${msg.from.username}`);
+    } else if (msg.text === 'О нас 😎') {
+        bot.sendMessage(clientId, info.about);
+    } else if (msg.text === 'Акции 🎉') {
+        bot.sendMessage(clientId, info.events);
     }
 });
