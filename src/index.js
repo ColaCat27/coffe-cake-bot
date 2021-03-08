@@ -22,7 +22,12 @@ const menu = {
     accept: [
         ['Подтвердить заказ']
     ]
-  };
+};
+
+const info = {
+    about: 'Бла бла бла бла какой-то текст о нас', 
+    events: 'Бла бла бла бла какой-то текст о последних акциях'
+};
 
 console.log('Bot started...')
 
@@ -45,6 +50,8 @@ bot.onText(new RegExp('\/start'), function (message, match) {
       username: message.from.username,
       name: message.from.first_name  
     };
+
+    info.profile = `Телеграм id: ${client.id}\n Имя: ${client.name}\n Юзернейм: ${client.username}`;
 
     
     const User = mongoose.model('users');
@@ -97,5 +104,7 @@ bot.on('message', msg => {
                 resize_keyboard: true
             }
         });
+    } else if (msg.text === 'Мой профиль 💼') {
+        bot.sendMessage(clientId, `Телеграм ID: ${msg.from.id}\n Имя: ${msg.from.first_name}\n Юзернейм: ${msg.from.username}`);
     }
 });
