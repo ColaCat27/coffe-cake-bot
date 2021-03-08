@@ -44,11 +44,10 @@ bot.onText(new RegExp('\/start'), function (message, match) {
     // вытаскиваем id клиента из пришедшего сообщения
     var clientId = message.chat.id;
     // посылаем ответное сообщение
-
     const client = {
       id: message.from.id,
       username: message.from.username,
-      name: message.from.first_name  
+      name: message.from.first_name
     };
 
     info.profile = `Телеграм id: ${client.id}\n Имя: ${client.name}\n Юзернейм: ${client.username}`;
@@ -62,7 +61,7 @@ bot.onText(new RegExp('\/start'), function (message, match) {
         if (user === null) {
             // Добавляем нового пользователя
             const newUser = new User(client).save();
-            bot.sendMessage(clientId, `Привет ${client.name}, Вы впервые запустили нашего бота, держите скидку 20%!`, {
+            bot.sendMessage(clientId, `Рады вас видеть ${client.name}`, {
                 reply_markup: {
                     keyboard: menu.first,
                     resize_keyboard: true
@@ -97,7 +96,7 @@ bot.on('message', msg => {
             }
         });
     } else if (msg.text.match(/Тестовое меню/)) {
-        const order = msg.text;
+        bot.forwardMessage('-1001289349629', clientId, msg.message_id)
         bot.sendMessage(clientId, 'Вам нужно подвердить заказ', {
             reply_markup: {
                 keyboard: menu.accept,
