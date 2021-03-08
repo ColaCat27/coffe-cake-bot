@@ -23,32 +23,28 @@ bot.onText(new RegExp('\/start'), function (message, match) {
     // вытаскиваем id клиента из пришедшего сообщения
     var clientId = message.chat.id;
     // посылаем ответное сообщение
-    // console.log(message);
-    const id = message.from.id;
-    const name = message.from.first_name;
-    const username = message.from.username;
 
     const client = {
-      id: id,
-      username: username,
-      name: name  
+      id: message.from.id,
+      username: message.from.username,
+      name: message.from.first_name  
     };
+
     
-    console.log(`ID: ${id}, Имя: ${name}, Юзейрнейм: ${username}`);
-
     const User = mongoose.model('users');
-
-    const candidate = User.findOne({ id });
-
-    if (!candidate) {
-        const newUser = new User(client).save();
-    } else {
-        console.log('Пользователь уже создан!');
-        bot.sendMessage(clientId, `Привет ${name}, Хочешь сделать заказ?`);
-    }
-
+    const candidate = User.findOne({id: client.id}, (err, user) => {
+        if (err) {
+            return;
+        }
+        if (user === null) {
+            const newUser = new User(client).save();
+            console.log('Добавили нового пользователя');
+        } else {
+            console.log('Пользователь уже создан!');
+            bot.sendMessage(clientId, `Привет ${client.name}, С возвращением!`);
+        }
+    });
 });
-
 
 
 // mongoose.connect(config.DB_URL, {
