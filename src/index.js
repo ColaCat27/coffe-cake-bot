@@ -26,6 +26,7 @@ mongoose.connect(link, {
 
 const User = mongoose.model('users');
 
+
 //=====================================================================================================
 
 //DataBase local
@@ -87,6 +88,10 @@ const keyboards = {
     cart: [
         ['Подтвердить заказ ✔️', 'Очистить корзину 🚮'],
         ['Добавить еще ➕']
+    ],
+    menu: [
+        ['Пред.страница', 'След.страница'],
+        ['Корзина 🛒']
     ]
 };
 
@@ -214,8 +219,21 @@ bot.on('message', msg => {
                 });
             break;
         case 'Подтвердить заказ ✔️':
-                console.log(`Новый заказ\nИмя: ${msg.from.first_name}\nМоб.телефон: **********`);
-                cart = [];
+
+                User.find({id: msg.from.id}, (err, user) => {
+                    if (err) {
+                        return;
+                    } else {
+                        bot.sendMessage(chat, `Новый заказ\nИмя: ${user[0].name}\nТелефон: ${user[0].phone}`);
+                        cart.forEach(item => {
+                            bot.sendMessage(chat, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
+                            .then(() => {
+                                cart = [];
+                            });
+                        })
+                    }
+                });
+                
                 bot.sendMessage(chat, 'Ваш заказ принят, скоро вам перезвонят', {
                     reply_markup: {
                         keyboard: keyboards.first,
