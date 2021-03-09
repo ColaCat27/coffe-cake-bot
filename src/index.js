@@ -9,13 +9,15 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 //=====================================================================================================
 
+const link = 'mongodb+srv://colacat:sMqHVlIICvEleBln@cluster0.igcby.mongodb.net/coffee';
+
 
 console.log('Bot started...');
 
 
 // Подключаемся к базе данных
 
-mongoose.connect(config.DB_URL, {
+mongoose.connect(link, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
@@ -140,12 +142,11 @@ bot.on('message', msg => {
 
 
 
-function sendMenu(chatId, item) {
-    bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
+async function sendMenu(chatId, item) {
+    await bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
         caption: item.name
     });
-
-    bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
+    await bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
         reply_markup: {
             inline_keyboard: menu.first
         }
