@@ -3,6 +3,7 @@ const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
+const { brotliCompress } = require('zlib');
 
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
@@ -29,38 +30,43 @@ const User = mongoose.model('users');
 
 //DataBase local
 
-const cart = [];
+let cart = [];
 
 const catalog = [
     {
         name: 'Вега ролл',
         price: 99,
         weight: '240г.',
-        photo: '\\img\\vega.jpg'
+        photo: '\\img\\vega.jpg',
+        baseName: 'vega'
     },
     {
         name: 'Футомаки с лососем',
         price: 109,
         weight: '270г.',
-        photo: '\\img\\fotomaki-losos.jpg'
+        photo: '\\img\\fotomaki-losos.jpg',
+        baseName: 'futomakilosos'
     },
     {
-        name: 'Фотомаки с тунцом',
+        name: 'Футомаки с тунцом',
         price: 109,
         weight: '270г.',
-        photo: '\\img\\fotomaki-tunec.jpg'
+        photo: '\\img\\fotomaki-tunec.jpg',
+        baseName: 'futomakitunec'
     },
     {
         name: 'Филадельфия с лососем',
         price: 119,
         weight: '260г.',
-        photo: '\\img\\philadelfia-losos.jpg'
+        photo: '\\img\\philadelfia-losos.jpg',
+        baseName: 'philadelphialosos'
     },
     {
         name: 'Калифорния с креветкой',
         price: 129,
         weight: '230г.',
-        photo: '\\img\\california-krevetka.jpg'
+        photo: '\\img\\california-krevetka.jpg',
+        baseName: 'californiakrevetka'
     }
 ];
 
@@ -72,72 +78,56 @@ const keyboards = {
     first: [
         ['О нас 🤩', 'Акции 🔥'],
         ['Меню 🍣', 'Корзина 🛒']
+    ],
+    cart: [
+        ['Подтвердить заказ', 'Очистить корзину'],
+        ['Добавить еще']
     ]
 };
 
-const menu = [
-    [
+const menu = {
+    vega: [
         [
             {
-                text: 'Добавить в корзину',
+                text: "Добавить в корзину",
                 callback_data: 'vega'
-            },
-            {
-                text: 'Убрать из корзины',
-                callback_data: 'vega-delete'
             }
         ]
     ],
-    [
+    futomakilosos: [
         [
             {
                 text: "Добавить в корзину",
-                callback_data: 'fotomakilosos'
-            },
-            {
-                text: 'Убрать из корзины',
-                callback_data: 'fotomakilosos-delete'
+                callback_data: 'futomakilosos'
             }
         ]
     ],
-    [
+    futomakitunec: [
         [
             {
                 text: "Добавить в корзину",
-                callback_data: 'fotomakitunec'
-            },
-            {
-                text: 'Убрать из корзины',
-                callback_data: 'fotomakitunec-delete'
+                callback_data: 'futomakitunec'
             }
         ]
     ],
-    [
+    philadelphialosos: [
         [
             {
                 text: "Добавить в корзину",
                 callback_data: 'philadelphialosos'
-            },
-            {
-                text: 'Убрать из корзины',
-                callback_data: 'philadelphialosos-delete'
             }
         ]
     ],
-    [
+    californiakrevetka: [
         [
             {
                 text: "Добавить в корзину",
                 callback_data: 'californiakrevetka'
-            },
-            {
-                text: 'Убрать из корзины',
-                callback_data: 'californiakrevetka-delete'
             }
         ]
-    ]
 
-];
+    ]
+}
 
 
 //=====================================================================================================
@@ -193,15 +183,59 @@ bot.on('message', msg => {
             sendMenu(chat, curr, i)
         })
     }
-});
+    if (msg.text === 'Корзина 🛒') {
+        const count = cart.length;
+        let cost = 0;
 
+        cart.forEach(item => {
+            cost += item.price;
+            bot.sendMessage(chat,  `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`, {
+                reply_markup: {
+                    keyboard: keyboards.cart,
+                    resize_keyboard: true
+                }
+            })
+        });
+        bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+    }
+    if (msg.text === 'Очистить корзину') {
+        cart = [];
+        bot.sendMessage(chat, 'Корзина очищена ', {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        });
+    }
+    if (msg.text === 'Подтвердить заказ') {
+        console.log(`Новый заказ\nИмя: ${msg.from.first_name}\nМоб.телефон: **********`);
+        cart = [];
+        bot.sendMessage(chat, 'Ваш заказ принят, скоро вам перезвонят', {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        });
+    }
+    if (msg.text === 'Добавить еще') {
+        bot.sendMessage(chat, `Вы можете добавить что-то ещё`, {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        });
+        catalog.forEach((curr, i) => {
+            sendMenu(chat, curr, i)
+        });
+    }
+});
 
 
 function sendMenu(chatId, item, index) {
      bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
-        caption: `Название: ${item.name} \n Цена: ${item.price}грн. \n Вес: ${item.weight}`,
+        caption: `Название: ${item.name} \nЦена: ${item.price}грн. \nВес: ${item.weight}`,
         reply_markup: {
-            inline_keyboard: menu[index]
+            inline_keyboard: menu[item.baseName]
         }
     });
 }
@@ -211,10 +245,15 @@ function sendMenu(chatId, item, index) {
 // Шаблон под ответ на инлайн меню
 
 bot.on('callback_query', query => {
-    if (query.data = 'test 1') {
-        bot.sendMessage(query.from.id, 'Вы успешно добавили товар в корзину', {
-            reply_markup: menu.first
-        })
-    } 
+    if (query.data) {
+        catalog.forEach(item => {
+            if (item.baseName === query.data) {
+                cart.push(item);
+                bot.answerCallbackQuery(query.id, `Добавили в корзину: ${item.name}`, {
+                    cache_time: 0
+                })
+            }
+        });
+    }
 });
 
