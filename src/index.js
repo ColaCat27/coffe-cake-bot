@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
@@ -33,6 +34,27 @@ const keyboards = {
         ['Меню', 'Корзина']
     ]
 };
+
+const menu = {
+    first: [
+        [
+            {
+                text: 'Тестовое меню 1',
+                callback_data: 'test 1',
+                price: '199',
+                weight: '500'
+            }
+        ]
+    ],
+    second: [
+        [
+            {
+                text: "Тестовое меню 2",
+                callback_data: 'test 2'
+            }
+        ]
+    ]
+}
 
 
 bot.onText(/\/start/, msg => {
@@ -74,4 +96,30 @@ bot.on('message', msg => {
             }
         });
     }
+
+    // Отправляем меню 
+
+    if (msg.text === 'Меню') {
+        bot.sendMessage(chatId, 'Наше меню: ');
+        publicMenu(chat);
+    }
 });
+
+async function sendMenu(chatId) {
+    await bot.sendPhoto(chatId, fs.readFileSync(__dirname + '\\img\\roll-1.jpg'), {
+        caption: `Суши какие то там`
+    });
+    bot.sendMessage(chatId, 'test', {
+        reply_markup: {
+            inline_keyboard: menu.first
+        }
+    });
+}
+
+// bot.on('callback_query', query => {
+//     if (query.data = 'test 1') {
+//         bot.sendMessage(query.from.id, 'Вы успешно добавили товар в корзину', {
+//             reply_markup: 
+//         })
+//     } 
+// });
