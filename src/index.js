@@ -182,73 +182,77 @@ bot.on('message', msg => {
 
     // Отправляем меню 
 
-    if (msg.text === 'Меню 🍣') {
-        bot.sendMessage(chat, 'Наше меню: ');
-        catalog.forEach((curr, i) => {
-            sendMenu(chat, curr, i)
-        })
+    switch(msg.text) {
+        case 'Меню 🍣':
+                bot.sendMessage(chat, 'Наше меню: ');
+                catalog.forEach((curr, i) => {
+                    sendMenu(chat, curr, i)
+                })
+            break;
+        case 'Корзина 🛒':
+                const count = cart.length;
+                let cost = 0;
+        
+                cart.forEach(item => {
+                    cost += item.price;
+                    bot.sendMessage(chat,  `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`, {
+                        reply_markup: {
+                            keyboard: keyboards.cart,
+                            resize_keyboard: true
+                        }
+                    })
+                });
+                bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+            break;
+        case 'Очистить корзину 🚮':
+                cart = [];
+                bot.sendMessage(chat, 'Корзина очищена ', {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                });
+            break;
+        case 'Подтвердить заказ ✔️':
+                console.log(`Новый заказ\nИмя: ${msg.from.first_name}\nМоб.телефон: **********`);
+                cart = [];
+                bot.sendMessage(chat, 'Ваш заказ принят, скоро вам перезвонят', {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                });
+            break;
+        case 'Добавить еще ➕':
+                bot.sendMessage(chat, `Вы можете добавить что-то ещё`, {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                });
+                catalog.forEach((curr, i) => {
+                    sendMenu(chat, curr, i)
+                });
+            break;
+        case 'О нас 🤩':
+                bot.sendMessage(chat, `${info.about}`, {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                });
+            break;
+        case 'Акции 🔥':
+                bot.sendMessage(chat, `${info.events}`, {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                });
+            break;
     }
-    if (msg.text === 'Корзина 🛒') {
-        const count = cart.length;
-        let cost = 0;
 
-        cart.forEach(item => {
-            cost += item.price;
-            bot.sendMessage(chat,  `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`, {
-                reply_markup: {
-                    keyboard: keyboards.cart,
-                    resize_keyboard: true
-                }
-            })
-        });
-        bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
-    }
-    if (msg.text === 'Очистить корзину 🚮') {
-        cart = [];
-        bot.sendMessage(chat, 'Корзина очищена ', {
-            reply_markup: {
-                keyboard: keyboards.first,
-                resize_keyboard: true
-            }
-        });
-    }
-    if (msg.text === 'Подтвердить заказ ✔️') {
-        console.log(`Новый заказ\nИмя: ${msg.from.first_name}\nМоб.телефон: **********`);
-        cart = [];
-        bot.sendMessage(chat, 'Ваш заказ принят, скоро вам перезвонят', {
-            reply_markup: {
-                keyboard: keyboards.first,
-                resize_keyboard: true
-            }
-        });
-    }
-    if (msg.text === 'Добавить еще ➕') {
-        bot.sendMessage(chat, `Вы можете добавить что-то ещё`, {
-            reply_markup: {
-                keyboard: keyboards.first,
-                resize_keyboard: true
-            }
-        });
-        catalog.forEach((curr, i) => {
-            sendMenu(chat, curr, i)
-        });
-    }
-    if (msg.text === 'О нас 🤩') {
-        bot.sendMessage(chat, `${info.about}`, {
-            reply_markup: {
-                keyboard: keyboards.first,
-                resize_keyboard: true
-            }
-        });
-    }
-    if (msg.text === 'Акции 🔥') {
-        bot.sendMessage(chat, `${info.events}`, {
-            reply_markup: {
-                keyboard: keyboards.first,
-                resize_keyboard: true
-            }
-        })
-    }
+
 });
 
 
