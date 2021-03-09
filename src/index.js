@@ -12,9 +12,6 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 const link = 'mongodb+srv://colacat:sMqHVlIICvEleBln@cluster0.igcby.mongodb.net/coffee';
 
 
-console.log('Bot started...');
-
-
 // Подключаемся к базе данных
 
 mongoose.connect(link, {
@@ -53,8 +50,8 @@ const catalog = [
 
 const keyboards = {
     first: [
-        ['О нас', 'Акции'],
-        ['Меню', 'Корзина']
+        ['О нас 🤩', 'Акции 🔥'],
+        ['Меню 🍣', 'Корзина 🛒']
     ]
 };
 
@@ -132,7 +129,7 @@ bot.on('message', msg => {
 
     // Отправляем меню 
 
-    if (msg.text === 'Меню') {
+    if (msg.text === 'Меню 🍣') {
         bot.sendMessage(chat, 'Наше меню: ');
         catalog.forEach(curr => {
             sendMenu(chat, curr)
@@ -142,11 +139,9 @@ bot.on('message', msg => {
 
 
 
-async function sendMenu(chatId, item) {
-    await bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
-        caption: item.name
-    });
-    await bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
+function sendMenu(chatId, item) {
+     bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
+        caption: `Название: ${item.name} \n Цена: ${item.price}грн. \n Вес: ${item.weight}`,
         reply_markup: {
             inline_keyboard: menu.first
         }
@@ -164,12 +159,3 @@ async function sendMenu(chatId, item) {
 //     } 
 // });
 
-
-// sendMenu(chat, catalog[0])
-// .then(() => {
-//     bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
-//         reply_markup: {
-//             inline_keyboard: menu.first
-//         }
-//     });
-// });
