@@ -37,23 +37,32 @@ const keyboards = {
 
 bot.onText(/\/start/, msg => {
     const chat = msg.chat.id;
-    bot.sendMessage(chat, 'Введите свой телефон');
+    const id = msg.from.id;
+
+    const candidate = User.findOne({id}, (err, user) => {
+        if(err) {
+            return;
+        }
+        if (user === null) {
+            client.name = msg.from.first_name;
+            client.username = msg.from.username;
+            client.id = id;
+            bot.sendMessage(chat, 'Введите свой телефон');
+        } else {
+            bot.sendMessage(chat, `Привет, ${msg.from.first_name}`, {
+                reply_markup: {
+                    keyboard: keyboards.first,
+                    resize_keyboard: true
+                }
+            })
+        }
+    });
 });
 
 bot.on('message', msg => {
     const chat = msg.chat.id;
     const regexp = /\D/;
     const id = msg.from.id;
-
-    const candidate = User.findOne({id}, (err, user) => {
-        if(err) {
-            return;
-        } else if (user === null) {
-            client.name = msg.from.first_name;
-            client.username = msg.from.username;
-            client.id = id;
-        }
-    });
 
     if (!regexp.test(msg.text)) {
         client.phone = msg.text;
