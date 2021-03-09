@@ -29,6 +29,8 @@ const User = mongoose.model('users');
 
 //DataBase local
 
+const cart = [];
+
 const catalog = [
     {
         name: 'Вега ролл',
@@ -41,6 +43,24 @@ const catalog = [
         price: 109,
         weight: '270г.',
         photo: '\\img\\fotomaki-losos.jpg'
+    },
+    {
+        name: 'Фотомаки с тунцом',
+        price: 109,
+        weight: '270г.',
+        photo: '\\img\\fotomaki-tunec.jpg'
+    },
+    {
+        name: 'Филадельфия с лососем',
+        price: 119,
+        weight: '260г.',
+        photo: '\\img\\philadelfia-losos.jpg'
+    },
+    {
+        name: 'Калифорния с креветкой',
+        price: 129,
+        weight: '230г.',
+        photo: '\\img\\california-krevetka.jpg'
     }
 ];
 
@@ -55,8 +75,8 @@ const keyboards = {
     ]
 };
 
-const menu = {
-    first: [
+const menu = [
+    [
         [
             {
                 text: 'Добавить в корзину',
@@ -68,19 +88,57 @@ const menu = {
             }
         ]
     ],
-    second: [
+    [
         [
             {
                 text: "Добавить в корзину",
-                callback_data: 'fotomaki'
+                callback_data: 'fotomakilosos'
             },
             {
                 text: 'Убрать из корзины',
-                callback_data: 'fotomaki-delete'
+                callback_data: 'fotomakilosos-delete'
+            }
+        ]
+    ],
+    [
+        [
+            {
+                text: "Добавить в корзину",
+                callback_data: 'fotomakitunec'
+            },
+            {
+                text: 'Убрать из корзины',
+                callback_data: 'fotomakitunec-delete'
+            }
+        ]
+    ],
+    [
+        [
+            {
+                text: "Добавить в корзину",
+                callback_data: 'philadelphialosos'
+            },
+            {
+                text: 'Убрать из корзины',
+                callback_data: 'philadelphialosos-delete'
+            }
+        ]
+    ],
+    [
+        [
+            {
+                text: "Добавить в корзину",
+                callback_data: 'californiakrevetka'
+            },
+            {
+                text: 'Убрать из корзины',
+                callback_data: 'californiakrevetka-delete'
             }
         ]
     ]
-};
+
+];
+
 
 //=====================================================================================================
 
@@ -131,19 +189,19 @@ bot.on('message', msg => {
 
     if (msg.text === 'Меню 🍣') {
         bot.sendMessage(chat, 'Наше меню: ');
-        catalog.forEach(curr => {
-            sendMenu(chat, curr)
+        catalog.forEach((curr, i) => {
+            sendMenu(chat, curr, i)
         })
     }
 });
 
 
 
-function sendMenu(chatId, item) {
+function sendMenu(chatId, item, index) {
      bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
         caption: `Название: ${item.name} \n Цена: ${item.price}грн. \n Вес: ${item.weight}`,
         reply_markup: {
-            inline_keyboard: menu.first
+            inline_keyboard: menu[index]
         }
     });
 }
@@ -151,11 +209,12 @@ function sendMenu(chatId, item) {
 
 
 // Шаблон под ответ на инлайн меню
-// bot.on('callback_query', query => {
-//     if (query.data = 'test 1') {
-//         bot.sendMessage(query.from.id, 'Вы успешно добавили товар в корзину', {
-//             reply_markup: 
-//         })
-//     } 
-// });
+
+bot.on('callback_query', query => {
+    if (query.data = 'test 1') {
+        bot.sendMessage(query.from.id, 'Вы успешно добавили товар в корзину', {
+            reply_markup: menu.first
+        })
+    } 
+});
 
