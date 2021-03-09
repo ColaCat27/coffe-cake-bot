@@ -8,28 +8,11 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 // =========================================================
 
-const menu = {
-    first: [
-      ['О нас 😎', 'Акции 🎉'], ['Сделать заказ 🍣', 'Мой профиль 💼']
-    ],
-    second: [
-      ['Тестовое меню 1'],
-      ['Тестовое меню 2'],
-      ['Тестовое меню 3'],
-      ['Тестовое меню 4'],
-      ['Вернуться назад']
-    ],
-    accept: [
-        ['Подтвердить заказ']
-    ]
-};
 
-const info = {
-    about: 'Бла бла бла бла какой-то текст о нас', 
-    events: 'Бла бла бла бла какой-то текст о последних акциях'
-};
+console.log('Bot started...');
 
-console.log('Bot started...')
+
+// Подключаемся к базе данных
 
 mongoose.connect(config.DB_URL, {
     useNewUrlParser: true,
@@ -40,74 +23,46 @@ mongoose.connect(config.DB_URL, {
     console.log(err)
 });
 
-bot.onText(new RegExp('\/start'), function (message, match) {
-    // вытаскиваем id клиента из пришедшего сообщения
-    var clientId = message.chat.id;
-    // посылаем ответное сообщение
-    const client = {
-      id: message.from.id,
-      username: message.from.username,
-      name: message.from.first_name
-    };
+const User = mongoose.model('users');
 
-    info.profile = `Телеграм id: ${client.id}\n Имя: ${client.name}\n Юзернейм: ${client.username}`;
+const client = {};
 
-    
-    const User = mongoose.model('users');
-    const candidate = User.findOne({id: client.id}, (err, user) => {
-        if (err) {
-            return;
-        }
-        if (user === null) {
-            // Добавляем нового пользователя
-            const newUser = new User(client).save();
-            bot.sendMessage(clientId, `Рады вас видеть ${client.name}`, {
-                reply_markup: {
-                    keyboard: menu.first,
-                    resize_keyboard: true
-                }
-            });
-        } else {
-            //Пользователь уже создан, просто приветствуем его и отправляем
-            bot.sendMessage(clientId, `Привет ${client.name}, С возвращением!`, {
-                reply_markup: {
-                    keyboard: menu.first,
-                    resize_keyboard: true
-                }
-            });
-        }
-    });
+const keyboards = {
+    first: [
+        ['О нас', 'Акции'],
+        ['Меню', 'Корзина']
+    ]
+};
+
+
+bot.onText(/\/start/, msg => {
+    const chat = msg.chat.id;
+    bot.sendMessage(chat, 'Введите свой телефон');
 });
 
 bot.on('message', msg => {
-    const clientId = msg.chat.id;
+    const chat = msg.chat.id;
+    const regexp = /\D/;
+    const id = msg.from.id;
 
-    if (msg.text === 'Сделать заказ 🍣') {
-        bot.sendMessage(clientId, 'Наше меню', {
+    const candidate = User.findOne({id}, (err, user) => {
+        if(err) {
+            return;
+        } else if (user === null) {
+            client.name = msg.from.first_name;
+            client.username = msg.from.username;
+            client.id = id;
+        }
+    });
+
+    if (!regexp.test(msg.text)) {
+        client.phone = msg.text;
+        const newUser = new User(client).save();
+        bot.sendMessage(chat, `Привет, ${client.name}`, {
             reply_markup: {
-                keyboard: menu.second
-            }
-        });
-    } else if (msg.text === 'Вернуться назад') {
-        bot.sendMessage(clientId, 'Вернулись назад', {
-            reply_markup: {
-                keyboard: menu.first,
+                keyboard: keyboards.first,
                 resize_keyboard: true
             }
         });
-    } else if (msg.text.match(/Тестовое меню/)) {
-        bot.forwardMessage('-1001289349629', clientId, msg.message_id)
-        bot.sendMessage(clientId, 'Вам нужно подвердить заказ', {
-            reply_markup: {
-                keyboard: menu.accept,
-                resize_keyboard: true
-            }
-        });
-    } else if (msg.text === 'Мой профиль 💼') {
-        bot.sendMessage(clientId, `Телеграм ID: ${msg.from.id}\n Имя: ${msg.from.first_name}\n Юзернейм: ${msg.from.username}`);
-    } else if (msg.text === 'О нас 😎') {
-        bot.sendMessage(clientId, info.about);
-    } else if (msg.text === 'Акции 🎉') {
-        bot.sendMessage(clientId, info.events);
     }
 });
