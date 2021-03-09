@@ -32,6 +32,11 @@ const User = mongoose.model('users');
 
 let cart = [];
 
+const info = {
+    events: 'Какая-то информация о последних акциях',
+    about: 'Какая-то информация о нас'
+}
+
 const catalog = [
     {
         name: 'Вега ролл',
@@ -80,8 +85,8 @@ const keyboards = {
         ['Меню 🍣', 'Корзина 🛒']
     ],
     cart: [
-        ['Подтвердить заказ', 'Очистить корзину'],
-        ['Добавить еще']
+        ['Подтвердить заказ ✔️', 'Очистить корзину 🚮'],
+        ['Добавить еще ➕']
     ]
 };
 
@@ -198,7 +203,7 @@ bot.on('message', msg => {
         });
         bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
     }
-    if (msg.text === 'Очистить корзину') {
+    if (msg.text === 'Очистить корзину 🚮') {
         cart = [];
         bot.sendMessage(chat, 'Корзина очищена ', {
             reply_markup: {
@@ -207,7 +212,7 @@ bot.on('message', msg => {
             }
         });
     }
-    if (msg.text === 'Подтвердить заказ') {
+    if (msg.text === 'Подтвердить заказ ✔️') {
         console.log(`Новый заказ\nИмя: ${msg.from.first_name}\nМоб.телефон: **********`);
         cart = [];
         bot.sendMessage(chat, 'Ваш заказ принят, скоро вам перезвонят', {
@@ -217,7 +222,7 @@ bot.on('message', msg => {
             }
         });
     }
-    if (msg.text === 'Добавить еще') {
+    if (msg.text === 'Добавить еще ➕') {
         bot.sendMessage(chat, `Вы можете добавить что-то ещё`, {
             reply_markup: {
                 keyboard: keyboards.first,
@@ -227,6 +232,22 @@ bot.on('message', msg => {
         catalog.forEach((curr, i) => {
             sendMenu(chat, curr, i)
         });
+    }
+    if (msg.text === 'О нас 🤩') {
+        bot.sendMessage(chat, `${info.about}`, {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        });
+    }
+    if (msg.text === 'Акции 🔥') {
+        bot.sendMessage(chat, `${info.events}`, {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        })
     }
 });
 
