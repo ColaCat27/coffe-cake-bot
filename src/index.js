@@ -7,7 +7,7 @@ const user = require('./models/user.model');
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
-// =========================================================
+//=====================================================================================================
 
 
 console.log('Bot started...');
@@ -26,7 +26,28 @@ mongoose.connect(config.DB_URL, {
 
 const User = mongoose.model('users');
 
-const client = {};
+//=====================================================================================================
+
+//DataBase local
+
+const catalog = [
+    {
+        name: 'Вега ролл',
+        price: 99,
+        weight: '240г.',
+        photo: '\\img\\vega.jpg'
+    },
+    {
+        name: 'Футомаки с лососем',
+        price: 109,
+        weight: '270г.',
+        photo: '\\img\\fotomaki-losos.jpg'
+    }
+];
+
+//=====================================================================================================
+
+// Menu keyboards
 
 const keyboards = {
     first: [
@@ -39,22 +60,33 @@ const menu = {
     first: [
         [
             {
-                text: 'Тестовое меню 1',
-                callback_data: 'test 1',
-                price: '199',
-                weight: '500'
+                text: 'Добавить в корзину',
+                callback_data: 'vega'
+            },
+            {
+                text: 'Убрать из корзины',
+                callback_data: 'vega-delete'
             }
         ]
     ],
     second: [
         [
             {
-                text: "Тестовое меню 2",
-                callback_data: 'test 2'
+                text: "Добавить в корзину",
+                callback_data: 'fotomaki'
+            },
+            {
+                text: 'Убрать из корзины',
+                callback_data: 'fotomaki-delete'
             }
         ]
     ]
-}
+};
+
+//=====================================================================================================
+
+const client = {};
+
 
 
 bot.onText(/\/start/, msg => {
@@ -84,11 +116,10 @@ bot.onText(/\/start/, msg => {
 bot.on('message', msg => {
     const chat = msg.chat.id;
     const regexp = /\D/;
-    const id = msg.from.id;
 
     if (!regexp.test(msg.text)) {
         client.phone = msg.text;
-        const newUser = new User(client).save();
+        new User(client).save();
         bot.sendMessage(chat, `Привет, ${client.name}`, {
             reply_markup: {
                 keyboard: keyboards.first,
@@ -100,26 +131,44 @@ bot.on('message', msg => {
     // Отправляем меню 
 
     if (msg.text === 'Меню') {
-        bot.sendMessage(chatId, 'Наше меню: ');
-        publicMenu(chat);
+        bot.sendMessage(chat, 'Наше меню: ');
+        catalog.forEach(curr => {
+            sendMenu(chat, curr)
+        })
     }
 });
 
-async function sendMenu(chatId) {
-    await bot.sendPhoto(chatId, fs.readFileSync(__dirname + '\\img\\roll-1.jpg'), {
-        caption: `Суши какие то там`
+
+
+function sendMenu(chatId, item) {
+    bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
+        caption: item.name
     });
-    bot.sendMessage(chatId, 'test', {
+
+    bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
         reply_markup: {
             inline_keyboard: menu.first
         }
     });
 }
 
+
+
+// Шаблон под ответ на инлайн меню
 // bot.on('callback_query', query => {
 //     if (query.data = 'test 1') {
 //         bot.sendMessage(query.from.id, 'Вы успешно добавили товар в корзину', {
 //             reply_markup: 
 //         })
 //     } 
+// });
+
+
+// sendMenu(chat, catalog[0])
+// .then(() => {
+//     bot.sendMessage(chatId, `Цена: ${item.price}грн`, {
+//         reply_markup: {
+//             inline_keyboard: menu.first
+//         }
+//     });
 // });
