@@ -198,7 +198,7 @@ bot.on('message', msg => {
                 const count = cart.length;
                 let cost = 0;
         
-                cart.forEach(item => {
+                cart.forEach((item, j) => {
                     cost += item.price;
                     bot.sendMessage(chat,  `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`, {
                         reply_markup: {
@@ -206,8 +206,13 @@ bot.on('message', msg => {
                             resize_keyboard: true
                         }
                     })
+                    if (j + 1 == cart.length) {
+                        setTimeout(() => {
+                            bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+                        }, 200)
+                    }
                 });
-                bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+                
             break;
         case 'Очистить корзину 🚮':
                 cart = [];
