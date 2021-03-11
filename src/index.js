@@ -173,43 +173,36 @@ bot.onText(/\/start/, msg => {
 });
 
 
-function sendCart(arr, id) {
+async function sendCart(arr, id) {
     let count = arr.length;
+    if (count == 0) {
+        return bot.sendMessage(id, `Вы ещё ничего не добавили в корзину`, {
+            reply_markup: {
+                keyboard: keyboards.first,
+                resize_keyboard: true
+            }
+        })
+    }
     let cost = 0;
-    const a = new Promise((resolve, reject) => {
-        arr.forEach(item => {
-           cost += item.price;
-           resolve(bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес: ${item.weight}`, {
+    for (let item of arr) {
+        cost += item.price;
+        await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес: ${item.weight}`, {
             reply_markup: {
                 keyboard: keyboards.cart,
                 resize_keyboard: true
-                }
-            }));
+            }
         });
-    });
-    a.then(() => {
-        bot.sendMessage(id, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
-    })
-    .catch(err => {
-        console.log(err);
-    });
+    }
+    await bot.sendMessage(id, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
 };
 
-function applyOrder(arr, customer, id) {
-    const b = new Promise((resolve, reject) => {
-        resolve(bot.sendMessage(id, `Новый заказ\nИмя: ${customer[0].name}\nТелефон: ${customer[0].phone}`));
-    })
-    .then(() => {
-        arr.forEach(item => {
-            bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
-            .then(() => {
-                arr = [];
-            });
-        });
-    })
-    .catch(err => {
-        console.log(err);
-    });
+async function applyOrder(arr, customer, id) {
+    
+    await bot.sendMessage(id, `Новый заказ\nИмя: ${customer[0].name}\nТелефон: ${customer[0].phone}`);
+    for (item of arr) {
+        await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
+    }
+    arr = [];
 };
 
 async function sendItems(id, array) {
