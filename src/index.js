@@ -3,21 +3,14 @@ const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
-const { brotliCompress } = require('zlib');
-const { countReset } = require('console');
-const { Resolver } = require('dns');
-
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 //=====================================================================================================
 
-const link = 'mongodb+srv://colacat:sMqHVlIICvEleBln@cluster0.igcby.mongodb.net/coffee';
-
-
 // Подключаемся к базе данных
 
-mongoose.connect(link, {
+mongoose.connect(config.DB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
@@ -245,7 +238,7 @@ bot.on('message', msg => {
 
     switch(msg.text) {
         case 'Меню 🍣':
-                sendMenu(chat, catalog)
+                sendMenu(chat, catalog);
             break;
         case 'Корзина 🛒':
                 sendCart(cart, chat);
@@ -288,9 +281,7 @@ bot.on('message', msg => {
                         resize_keyboard: true
                     }
                 });
-                catalog.forEach((curr, i) => {
-                    sendMenu(chat, curr, i)
-                });
+                sendMenu(chat, catalog);
             break;
         case 'О нас 🤩':
                 bot.sendMessage(chat, `${info.about}`, {
@@ -309,8 +300,6 @@ bot.on('message', msg => {
                 });
             break;
     }
-
-
 });
 
 
