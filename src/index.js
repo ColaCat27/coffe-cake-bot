@@ -4,6 +4,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
 const { brotliCompress } = require('zlib');
+const { countReset } = require('console');
+const { Resolver } = require('dns');
 
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
@@ -170,11 +172,70 @@ bot.onText(/\/start/, msg => {
     });
 });
 
+
+function sendCart(arr, id) {
+    let count = arr.length;
+    let cost = 0;
+    const a = new Promise((resolve, reject) => {
+        arr.forEach(item => {
+           cost += item.price;
+           resolve(bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес: ${item.weight}`, {
+            reply_markup: {
+                keyboard: keyboards.cart,
+                resize_keyboard: true
+                }
+            }));
+        });
+    });
+    a.then(() => {
+        bot.sendMessage(id, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+    })
+    .catch(err => {
+        console.log(err);
+    });
+};
+
+function applyOrder(arr, customer, id) {
+    const b = new Promise((resolve, reject) => {
+        resolve(bot.sendMessage(id, `Новый заказ\nИмя: ${customer[0].name}\nТелефон: ${customer[0].phone}`));
+    })
+    .then(() => {
+        arr.forEach(item => {
+            bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
+            .then(() => {
+                arr = [];
+            });
+        });
+    })
+    .catch(err => {
+        console.log(err);
+    });
+};
+
+function sendMenu(chatId, arr) {
+    const c = new Promise((resolve, reject) => {
+        resolve(bot.sendMessage(chatId, 'Наше меню: '));
+    })
+    .then(() => {
+        arr.forEach((curr) => {
+            bot.sendPhoto(chatId, fs.readFileSync(__dirname + curr.photo), {
+                caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}`,
+                reply_markup: {
+                    inline_keyboard: menu[curr.baseName]
+                }
+            });
+        })
+    })
+    .catch(err => {
+        console.log(err);
+    });
+};
+
 bot.on('message', msg => {
     const chat = msg.chat.id;
     const regexp = /\D/;
 
-    if (!regexp.test(msg.text)) {
+    if (!regexp.test(msg.text) && msg.text.length >= 10) {
         client.phone = msg.text;
         new User(client).save();
         bot.sendMessage(chat, `Привет, ${client.name}`, {
@@ -185,34 +246,16 @@ bot.on('message', msg => {
         });
     }
 
+// bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
+
     // Отправляем меню 
 
     switch(msg.text) {
         case 'Меню 🍣':
-                bot.sendMessage(chat, 'Наше меню: ');
-                catalog.forEach((curr, i) => {
-                    sendMenu(chat, curr, i)
-                })
+                sendMenu(chat, catalog)
             break;
         case 'Корзина 🛒':
-                const count = cart.length;
-                let cost = 0;
-        
-                cart.forEach((item, j) => {
-                    cost += item.price;
-                    bot.sendMessage(chat,  `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`, {
-                        reply_markup: {
-                            keyboard: keyboards.cart,
-                            resize_keyboard: true
-                        }
-                    })
-                    if (j + 1 == cart.length) {
-                        setTimeout(() => {
-                            bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
-                        }, 200)
-                    }
-                });
-                
+                sendCart(cart, chat);
             break;
         case 'Очистить корзину 🚮':
                 cart = [];
@@ -224,18 +267,11 @@ bot.on('message', msg => {
                 });
             break;
         case 'Подтвердить заказ ✔️':
-
                 User.find({id: msg.from.id}, (err, user) => {
                     if (err) {
                         return;
                     } else {
-                        bot.sendMessage(chat, `Новый заказ\nИмя: ${user[0].name}\nТелефон: ${user[0].phone}`);
-                        cart.forEach(item => {
-                            bot.sendMessage(chat, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
-                            .then(() => {
-                                cart = [];
-                            });
-                        })
+                        applyOrder(cart, user, chat);
                     }
                 });
                 
@@ -278,15 +314,6 @@ bot.on('message', msg => {
 
 });
 
-
-function sendMenu(chatId, item, index) {
-     bot.sendPhoto(chatId, fs.readFileSync(__dirname + item.photo), {
-        caption: `Название: ${item.name} \nЦена: ${item.price}грн. \nВес: ${item.weight}`,
-        reply_markup: {
-            inline_keyboard: menu[item.baseName]
-        }
-    });
-}
 
 
 
