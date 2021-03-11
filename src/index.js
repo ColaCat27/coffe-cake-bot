@@ -212,19 +212,23 @@ function applyOrder(arr, customer, id) {
     });
 };
 
+async function sendItems(id, array) {
+    for (let curr of array) {
+        await bot.sendPhoto(id, fs.readFileSync(__dirname + curr.photo), {
+            caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}`,
+            reply_markup: {
+                inline_keyboard: menu[curr.baseName]
+            }
+        });
+    }
+}
+
 function sendMenu(chatId, arr) {
     const c = new Promise((resolve, reject) => {
         resolve(bot.sendMessage(chatId, 'Наше меню: '));
     })
     .then(() => {
-        arr.forEach((curr) => {
-            bot.sendPhoto(chatId, fs.readFileSync(__dirname + curr.photo), {
-                caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}`,
-                reply_markup: {
-                    inline_keyboard: menu[curr.baseName]
-                }
-            });
-        })
+        sendItems(chatId, arr);
     })
     .catch(err => {
         console.log(err);
@@ -245,8 +249,6 @@ bot.on('message', msg => {
             }
         });
     }
-
-// bot.sendMessage(chat, `Количество товаров в корзине: ${count}\nСумма заказа: ${cost}грн.`);
 
     // Отправляем меню 
 
