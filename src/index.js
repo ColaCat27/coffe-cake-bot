@@ -197,12 +197,10 @@ async function sendCart(arr, id) {
 };
 
 async function applyOrder(arr, customer, id) {
-    
     await bot.sendMessage(id, `Новый заказ\nИмя: ${customer[0].name}\nТелефон: ${customer[0].phone}`);
     for (item of arr) {
         await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
     }
-    arr = [];
 };
 
 async function sendItems(id, array) {
@@ -266,7 +264,13 @@ bot.on('message', msg => {
                     if (err) {
                         return;
                     } else {
-                        applyOrder(cart, user, chat);
+                        applyOrder(cart, user, chat)
+                        .then(() => {
+                            cart = []
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                        });
                     }
                 });
                 
