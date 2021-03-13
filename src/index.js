@@ -3,6 +3,7 @@ const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
+const info = require('./models/info.model');
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
@@ -10,17 +11,25 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 // Подключаемся к базе данных
 
+
+let information = {};
+
+
 mongoose.connect(config.DB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
-    console.log('MongoDB connected')
+    console.log('MongoDB connected');
+    Info.find((err, res) => {
+        if(err) console.log(err);
+        information = Object.assign(res[0]);
+    })
 }).catch((err) => {
     console.log(err)
 });
 
 const User = mongoose.model('users');
-
+const Info = mongoose.model('info');
 
 //=====================================================================================================
 
@@ -28,10 +37,10 @@ const User = mongoose.model('users');
 
 let cart = [];
 
-const info = {
-    events: 'Какая-то информация о последних акциях',
-    about: 'Какая-то информация о нас'
-}
+// const info = {
+//     events: 'Какая-то информация о последних акциях',
+//     about: 'Какая-то информация о нас'
+// }
 
 const catalog = [
     {
@@ -155,7 +164,7 @@ bot.onText(/\/start/, msg => {
             client.id = id;
             bot.sendMessage(chat, 'Введите свой телефон');
         } else {
-            bot.sendMessage(chat, `Привет, ${msg.from.first_name}`, {
+            bot.sendMessage(chat, `${information.greetings}` , {
                 reply_markup: {
                     keyboard: keyboards.first,
                     resize_keyboard: true
@@ -284,7 +293,7 @@ bot.on('message', msg => {
                 sendMenu(chat, catalog);
             break;
         case 'О нас 🤩':
-                bot.sendMessage(chat, `${info.about}`, {
+                bot.sendMessage(chat, `${information.about}`, {
                     reply_markup: {
                         keyboard: keyboards.first,
                         resize_keyboard: true
@@ -292,7 +301,7 @@ bot.on('message', msg => {
                 });
             break;
         case 'Акции 🔥':
-                bot.sendMessage(chat, `${info.events}`, {
+                bot.sendMessage(chat, `${information.events}`, {
                     reply_markup: {
                         keyboard: keyboards.first,
                         resize_keyboard: true
