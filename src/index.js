@@ -4,6 +4,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config');
 const user = require('./models/user.model');
 const info = require('./models/info.model');
+const item = require('./models/item.model');
+const { create } = require('domain');
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
@@ -14,6 +16,11 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 let information = {};
 
+let catalog = [];
+
+const User = mongoose.model('users');
+const Info = mongoose.model('info');
+const Item = mongoose.model('item');
 
 mongoose.connect(config.DB_URL, {
     useNewUrlParser: true,
@@ -24,13 +31,24 @@ mongoose.connect(config.DB_URL, {
         if(err) console.log(err);
         information = Object.assign(res[0]);
     })
+    .catch(e => {
+        console.log(e);
+    });
+
+    Item.find((err, res) => {
+        if(err) console.log(err);
+        for (let i = 0; i < res.length; i++) {
+            catalog.push(res[i]);
+        }
+        createButtons(catalog, menu);
+    })
+    
 }).catch((err) => {
     console.log(err)
 });
 
-const User = mongoose.model('users');
-const Info = mongoose.model('info');
 
+console.log(information);
 //=====================================================================================================
 
 //DataBase local
@@ -42,43 +60,43 @@ let cart = [];
 //     about: 'Какая-то информация о нас'
 // }
 
-const catalog = [
-    {
-        name: 'Вега ролл',
-        price: 99,
-        weight: '240г.',
-        photo: '\\img\\vega.jpg',
-        baseName: 'vega'
-    },
-    {
-        name: 'Футомаки с лососем',
-        price: 109,
-        weight: '270г.',
-        photo: '\\img\\fotomaki-losos.jpg',
-        baseName: 'futomakilosos'
-    },
-    {
-        name: 'Футомаки с тунцом',
-        price: 109,
-        weight: '270г.',
-        photo: '\\img\\fotomaki-tunec.jpg',
-        baseName: 'futomakitunec'
-    },
-    {
-        name: 'Филадельфия с лососем',
-        price: 119,
-        weight: '260г.',
-        photo: '\\img\\philadelfia-losos.jpg',
-        baseName: 'philadelphialosos'
-    },
-    {
-        name: 'Калифорния с креветкой',
-        price: 129,
-        weight: '230г.',
-        photo: '\\img\\california-krevetka.jpg',
-        baseName: 'californiakrevetka'
-    }
-];
+// const catalog = [
+//     {
+//         name: 'Вега ролл',
+//         price: 99,
+//         weight: '240г.',
+//         photo: '\\img\\vega.jpg',
+//         baseName: 'vega'
+//     },
+//     {
+//         name: 'Футомаки с лососем',
+//         price: 109,
+//         weight: '270г.',
+//         photo: '\\img\\fotomaki-losos.jpg',
+//         baseName: 'futomakilosos'
+//     },
+//     {
+//         name: 'Футомаки с тунцом',
+//         price: 109,
+//         weight: '270г.',
+//         photo: '\\img\\fotomaki-tunec.jpg',
+//         baseName: 'futomakitunec'
+//     },
+//     {
+//         name: 'Филадельфия с лососем',
+//         price: 119,
+//         weight: '260г.',
+//         photo: '\\img\\philadelfia-losos.jpg',
+//         baseName: 'philadelphialosos'
+//     },
+//     {
+//         name: 'Калифорния с креветкой',
+//         price: 129,
+//         weight: '230г.',
+//         photo: '\\img\\california-krevetka.jpg',
+//         baseName: 'californiakrevetka'
+//     }
+// ];
 
 //=====================================================================================================
 
@@ -99,50 +117,68 @@ const keyboards = {
     ]
 };
 
-const menu = {
-    vega: [
-        [
-            {
-                text: "Добавить в корзину",
-                callback_data: 'vega'
-            }
-        ]
-    ],
-    futomakilosos: [
-        [
-            {
-                text: "Добавить в корзину",
-                callback_data: 'futomakilosos'
-            }
-        ]
-    ],
-    futomakitunec: [
-        [
-            {
-                text: "Добавить в корзину",
-                callback_data: 'futomakitunec'
-            }
-        ]
-    ],
-    philadelphialosos: [
-        [
-            {
-                text: "Добавить в корзину",
-                callback_data: 'philadelphialosos'
-            }
-        ]
-    ],
-    californiakrevetka: [
-        [
-            {
-                text: "Добавить в корзину",
-                callback_data: 'californiakrevetka'
-            }
-        ]
+let menu = {
+    // vega: [
+    //     [
+    //         {
+    //             text: "Добавить в корзину",
+    //             callback_data: 'vega'
+    //         }
+    //     ]
+    // ],
+    // futomakilosos: [
+    //     [
+    //         {
+    //             text: "Добавить в корзину",
+    //             callback_data: 'futomakilosos'
+    //         }
+    //     ]
+    // ],
+    // futomakitunec: [
+    //     [
+    //         {
+    //             text: "Добавить в корзину",
+    //             callback_data: 'futomakitunec'
+    //         }
+    //     ]
+    // ],
+    // philadelphialosos: [
+    //     [
+    //         {
+    //             text: "Добавить в корзину",
+    //             callback_data: 'philadelphialosos'
+    //         }
+    //     ]
+    // ],
+    // californiakrevetka: [
+    //     [
+    //         {
+    //             text: "Добавить в корзину",
+    //             callback_data: 'californiakrevetka'
+    //         }
+    //     ]
 
-    ]
+    // ]
 }
 
+function createButtons(arr, obj) {
+    for ( let i = 0; i < arr.length; i++) {
+    obj[arr[i].baseName] = [
+      [
+        {
+          text: 'Добавить в корзину',
+          callback_data: arr[i].baseName
+        }
+      ]
+    ]
+  }
+  return obj;
+}
+
+console.log(createButtons(catalog, menu));
+
+// menu = Object.assign(createButtons(catalog, menu));
+// console.log(menu);
 
 //=====================================================================================================
 
@@ -188,7 +224,7 @@ async function sendCart(arr, id) {
     let cost = 0;
     for (let item of arr) {
         cost += item.price;
-        await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес: ${item.weight}`, {
+        await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес: ${item.weight}гр.`, {
             reply_markup: {
                 keyboard: keyboards.cart,
                 resize_keyboard: true
@@ -207,7 +243,7 @@ async function applyOrder(arr, customer, id) {
 
 async function sendItems(id, array) {
     for (let curr of array) {
-        await bot.sendPhoto(id, fs.readFileSync(__dirname + curr.photo), {
+        await bot.sendPhoto(id, curr.photo, {
             caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}`,
             reply_markup: {
                 inline_keyboard: menu[curr.baseName]
