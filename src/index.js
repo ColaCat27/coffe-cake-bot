@@ -14,10 +14,6 @@ const bot = new TelegramBot(config.TOKEN, {polling: true});
 // Подключаемся к базе данных
 
 
-let information = {};
-
-let catalog = [];
-
 const User = mongoose.model('users');
 const Info = mongoose.model('info');
 const Item = mongoose.model('item');
@@ -26,39 +22,17 @@ mongoose.connect(config.DB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
-    console.log('MongoDB connected');
-    Info.find((err, res) => {
-        if(err) console.log(err);
-        information = Object.assign(res[0]);
-    })
-    .catch(e => {
-        console.log(e);
-    });
-
-    Item.find((err, res) => {
-        if(err) console.log(err);
-        for (let i = 0; i < res.length; i++) {
-            catalog.push(res[i]);
-        }
-        createButtons(catalog, menu);
-    })
-    
+    console.log('MongoDB connected');    
 }).catch((err) => {
     console.log(err)
 });
 
 
-console.log(information);
 //=====================================================================================================
 
 //DataBase local
 
 let cart = [];
-
-// const info = {
-//     events: 'Какая-то информация о последних акциях',
-//     about: 'Какая-то информация о нас'
-// }
 
 // const catalog = [
 //     {
@@ -117,68 +91,6 @@ const keyboards = {
     ]
 };
 
-let menu = {
-    // vega: [
-    //     [
-    //         {
-    //             text: "Добавить в корзину",
-    //             callback_data: 'vega'
-    //         }
-    //     ]
-    // ],
-    // futomakilosos: [
-    //     [
-    //         {
-    //             text: "Добавить в корзину",
-    //             callback_data: 'futomakilosos'
-    //         }
-    //     ]
-    // ],
-    // futomakitunec: [
-    //     [
-    //         {
-    //             text: "Добавить в корзину",
-    //             callback_data: 'futomakitunec'
-    //         }
-    //     ]
-    // ],
-    // philadelphialosos: [
-    //     [
-    //         {
-    //             text: "Добавить в корзину",
-    //             callback_data: 'philadelphialosos'
-    //         }
-    //     ]
-    // ],
-    // californiakrevetka: [
-    //     [
-    //         {
-    //             text: "Добавить в корзину",
-    //             callback_data: 'californiakrevetka'
-    //         }
-    //     ]
-
-    // ]
-}
-
-function createButtons(arr, obj) {
-    for ( let i = 0; i < arr.length; i++) {
-    obj[arr[i].baseName] = [
-      [
-        {
-          text: 'Добавить в корзину',
-          callback_data: arr[i].baseName
-        }
-      ]
-    ]
-  }
-  return obj;
-}
-
-console.log(createButtons(catalog, menu));
-
-// menu = Object.assign(createButtons(catalog, menu));
-// console.log(menu);
 
 //=====================================================================================================
 
@@ -200,7 +112,7 @@ bot.onText(/\/start/, msg => {
             client.id = id;
             bot.sendMessage(chat, 'Введите свой телефон');
         } else {
-            bot.sendMessage(chat, `${information.greetings}` , {
+            bot.sendMessage(chat, `привет` , {
                 reply_markup: {
                     keyboard: keyboards.first,
                     resize_keyboard: true
@@ -236,17 +148,24 @@ async function sendCart(arr, id) {
 
 async function applyOrder(arr, customer, id) {
     await bot.sendMessage(id, `Новый заказ\nИмя: ${customer[0].name}\nТелефон: ${customer[0].phone}`);
-    for (item of arr) {
-        await bot.sendMessage(id, `Название: ${item.name}\nЦена: ${item.price}грн.\nВес:${item.weight}`)
+    for (i of arr) {
+        await bot.sendMessage(id, `Название: ${i.name}\nЦена: ${i.price}грн.\nВес:${i.weight}гр.`)
     }
 };
 
 async function sendItems(id, array) {
     for (let curr of array) {
         await bot.sendPhoto(id, curr.photo, {
-            caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}`,
+            caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}гр.`,
             reply_markup: {
-                inline_keyboard: menu[curr.baseName]
+                inline_keyboard: [
+                    [
+                        {
+                            text: 'Добавить в корзину',
+                            callback_data: curr.baseName
+                        }
+                    ]
+                ]
             }
         });
     }
@@ -283,7 +202,10 @@ bot.on('message', msg => {
 
     switch(msg.text) {
         case 'Меню 🍣':
-                sendMenu(chat, catalog);
+            Item.find().exec((err, res) => {
+                sendMenu(chat, res);
+            })
+                // sendMenu(chat, catalog);
             break;
         case 'Корзина 🛒':
                 sendCart(cart, chat);
@@ -326,10 +248,10 @@ bot.on('message', msg => {
                         resize_keyboard: true
                     }
                 });
-                sendMenu(chat, catalog);
+                // sendMenu(chat, catalog);
             break;
         case 'О нас 🤩':
-                bot.sendMessage(chat, `${information.about}`, {
+                bot.sendMessage(chat, `о нас`, {
                     reply_markup: {
                         keyboard: keyboards.first,
                         resize_keyboard: true
@@ -337,7 +259,7 @@ bot.on('message', msg => {
                 });
             break;
         case 'Акции 🔥':
-                bot.sendMessage(chat, `${information.events}`, {
+                bot.sendMessage(chat, `акции`, {
                     reply_markup: {
                         keyboard: keyboards.first,
                         resize_keyboard: true
@@ -348,20 +270,18 @@ bot.on('message', msg => {
 });
 
 
-
-
-// Шаблон под ответ на инлайн меню
-
 bot.on('callback_query', query => {
     if (query.data) {
-        catalog.forEach(item => {
-            if (item.baseName === query.data) {
-                cart.push(item);
-                bot.answerCallbackQuery(query.id, `Добавили в корзину: ${item.name}`, {
-                    cache_time: 0
-                })
-            }
-        });
+        Item.find().exec((err, res) => {
+            if(err) console.log(err)
+            res.forEach(item => {
+                if (item.baseName === query.data) {
+                    cart.push(item);
+                    bot.answerCallbackQuery(query.id, `Добавили в корзину: ${item.name}`, {
+                        cache_time: 0
+                    })
+                }
+            })
+        })
     }
 });
-
