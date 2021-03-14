@@ -5,7 +5,6 @@ const config = require('./config');
 const user = require('./models/user.model');
 const info = require('./models/info.model');
 const item = require('./models/item.model');
-const { create } = require('domain');
 
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
@@ -30,47 +29,7 @@ mongoose.connect(config.DB_URL, {
 
 //=====================================================================================================
 
-//DataBase local
-
 let cart = [];
-
-// const catalog = [
-//     {
-//         name: 'Вега ролл',
-//         price: 99,
-//         weight: '240г.',
-//         photo: '\\img\\vega.jpg',
-//         baseName: 'vega'
-//     },
-//     {
-//         name: 'Футомаки с лососем',
-//         price: 109,
-//         weight: '270г.',
-//         photo: '\\img\\fotomaki-losos.jpg',
-//         baseName: 'futomakilosos'
-//     },
-//     {
-//         name: 'Футомаки с тунцом',
-//         price: 109,
-//         weight: '270г.',
-//         photo: '\\img\\fotomaki-tunec.jpg',
-//         baseName: 'futomakitunec'
-//     },
-//     {
-//         name: 'Филадельфия с лососем',
-//         price: 119,
-//         weight: '260г.',
-//         photo: '\\img\\philadelfia-losos.jpg',
-//         baseName: 'philadelphialosos'
-//     },
-//     {
-//         name: 'Калифорния с креветкой',
-//         price: 129,
-//         weight: '230г.',
-//         photo: '\\img\\california-krevetka.jpg',
-//         baseName: 'californiakrevetka'
-//     }
-// ];
 
 //=====================================================================================================
 
@@ -112,13 +71,18 @@ bot.onText(/\/start/, msg => {
             client.id = id;
             bot.sendMessage(chat, 'Введите свой телефон');
         } else {
-            bot.sendMessage(chat, `привет` , {
-                reply_markup: {
-                    keyboard: keyboards.first,
-                    resize_keyboard: true
+            Info.find((err, res) => {
+                if (err) {
+                    return;
                 }
-            })
-        }
+                bot.sendMessage(chat, `${res[0].greetings}`, {
+                    reply_markup: {
+                        keyboard: keyboards.first,
+                        resize_keyboard: true
+                    }
+                })
+            }
+        )}
     });
 });
 
@@ -205,7 +169,6 @@ bot.on('message', msg => {
             Item.find().exec((err, res) => {
                 sendMenu(chat, res);
             })
-                // sendMenu(chat, catalog);
             break;
         case 'Корзина 🛒':
                 sendCart(cart, chat);
@@ -248,7 +211,6 @@ bot.on('message', msg => {
                         resize_keyboard: true
                     }
                 });
-                // sendMenu(chat, catalog);
             break;
         case 'О нас 🤩':
                 bot.sendMessage(chat, `о нас`, {
