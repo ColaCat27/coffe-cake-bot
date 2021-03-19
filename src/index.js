@@ -6,6 +6,10 @@ const user = require('./models/user.model');
 const info = require('./models/info.model');
 const item = require('./models/item.model');
 
+require('https').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
+    res.end('')
+  });
+
 const bot = new TelegramBot(config.TOKEN, {polling: true});
 
 //=====================================================================================================
