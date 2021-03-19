@@ -139,9 +139,16 @@ async function sendItems(id, array) {
     }
 }
 
-function sendMenu(chatId, arr) {
+async function sendMenu(chatId, arr) {
     const c = new Promise((resolve, reject) => {
-        resolve(bot.sendMessage(chatId, 'Наше меню: '));
+        bot.sendMessage(chatId, 'Наше меню: ')
+        .then((e,r) => {
+            if (e) return reject(e);
+            resolve(r);
+        })
+        .catch(err => {
+            return err;
+        })
     })
     .then(() => {
         sendItems(chatId, arr);
