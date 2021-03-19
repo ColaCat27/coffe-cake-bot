@@ -139,24 +139,11 @@ async function sendItems(id, array) {
     }
 }
 
-function sendMenu(chatId, arr) {
-    const c = new Promise((resolve, reject) => {
-        bot.sendMessage(chatId, 'Наше меню: ')
-        .then((e,r) => {
-            if (e) return reject(e);
-            resolve(r);
-        })
-        .catch(err => {
-            return err;
-        })
-    })
-    .then(() => {
-        sendItems(chatId, arr);
-    })
-    .catch(err => {
-        console.log(err);
-    });
+async function sendMenu(chatId, arr) {
+    await bot.sendMessage(chatId, 'Наше меню: ')
+    await sendItems(chatId, arr);
 };
+
 
 bot.on('message', msg => {
     const chat = msg.chat.id;
