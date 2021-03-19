@@ -6,7 +6,7 @@ const user = require('./models/user.model');
 const info = require('./models/info.model');
 const item = require('./models/item.model');
 
-require('https').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
+require('http').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
     res.end('')
   });
 
