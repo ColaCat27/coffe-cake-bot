@@ -141,7 +141,13 @@ async function sendItems(id, array) {
 
 async function sendMenu(chatId, arr) {
     await bot.sendMessage(chatId, 'Наше меню: ')
-    await sendItems(chatId, arr);
+    .then(r => {
+        console.log('result: ' + r);
+    })
+    .catch(e => {
+        console.log('error: ' + e)
+    })
+    sendItems(chatId, arr);
 };
 
 
