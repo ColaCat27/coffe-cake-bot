@@ -122,6 +122,8 @@ async function applyOrder(arr, customer, id) {
 };
 
 async function sendItems(id, array) {
+    console.log(id);
+    console.log(array);
     for (let curr of array) {
         await bot.sendPhoto(id, curr.photo, {
             caption: `Название: ${curr.name} \nЦена: ${curr.price}грн. \nВес: ${curr.weight}гр.`,
