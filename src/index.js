@@ -167,6 +167,9 @@ bot.on('message', msg => {
     switch(msg.text) {
         case 'Меню 🍣':
             Item.find().exec((err, res) => {
+                if (err) {
+                    throw err;
+                }
                 sendMenu(chat, res);
             })
             break;
